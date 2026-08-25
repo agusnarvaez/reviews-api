@@ -4,7 +4,7 @@
 #
 
 app = "bapps-reviews-api"
-primary_region = "scl"
+primary_region = "gru"
 
 [build]
 
