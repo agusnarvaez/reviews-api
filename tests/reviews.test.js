@@ -97,6 +97,39 @@ describe('GET /reviews', () => {
     expect(second.body.reviews[0].author).toBe('Nombre Apellido')
   })
 
+  it('minStars filtra reseñas negativas, pero sin el param no filtra nada', async () => {
+    const mixedFixture = placeFixture({
+      id: 'ChIJallowed4',
+      reviews: [
+        {
+          authorAttribution: { displayName: 'Cliente Feliz' },
+          text: { text: 'Diez puntos', languageCode: 'es' },
+          rating: 5,
+          publishTime: '2025-11-03T18:22:11Z',
+        },
+        {
+          authorAttribution: { displayName: 'Cliente Enojado' },
+          text: { text: 'Pésima experiencia', languageCode: 'es' },
+          rating: 2,
+          publishTime: '2025-11-02T18:22:11Z',
+        },
+      ],
+    })
+
+    fetch.mockResolvedValueOnce(jsonResponse(mixedFixture))
+    const filtered = await request(app)
+      .get('/reviews')
+      .query({ placeId: 'ChIJallowed4', minStars: 4 })
+
+    expect(filtered.body.reviews).toHaveLength(1)
+    expect(filtered.body.reviews[0].author).toBe('Cliente Feliz')
+
+    // Mismo placeId, cache ya tibia: sin minStars, el default es 0 y no filtra nada.
+    const unfiltered = await request(app).get('/reviews').query({ placeId: 'ChIJallowed4' })
+
+    expect(unfiltered.body.reviews).toHaveLength(2)
+  })
+
   it('placeId fuera de la allowlist devuelve 400', async () => {
     const res = await request(app).get('/reviews').query({ placeId: 'ChIJblocked' })
 
